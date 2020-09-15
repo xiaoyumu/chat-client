@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <!-- 
+            https://developer.mozilla.org/zh-CN/docs/Web/Web_Components/Using_custom_elements
+            在Chrome版本76.0.3809.132（正式版本）（64 位）中测试发现，customElements.define()必须在js文件中调用，
+            且引用此js文件时必须在script标签上添加defer属性，否则this.getAttribute('属性名称')无法获取到值。
+        -->
+        <script src="web-chat-client.js" defer></script>
+    </head>
+    <body>       
+        <chat-client client-title="This is my title">
+
+        </chat-client>
+    </body>
+</html>
