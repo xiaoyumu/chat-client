@@ -1,6 +1,5 @@
 (function (global) {
     'use strict';
-
     let elementRootName = 'chat-client'
     let customElementRegistry = global.window.customElements;
     customElementRegistry.define(elementRootName, 
@@ -59,7 +58,7 @@
                 sendButton.setAttribute('class', 'chat-send-button');
                 sendButton.setAttribute('type', 'button');
                 sendButton.setAttribute('value', 'Send');
-                sendButton.setAttribute('id', chat_button_id)
+                sendButton.setAttribute('id', chat_button_id);
 
                 inputControlArea.appendChild(inputBox);
                 inputControlArea.appendChild(sendButton);
@@ -77,21 +76,58 @@
                 let titleBarHeight = 40;
                 let inputAreaHeight = 60;
                 let conversationAreaHeight = wrapperHeight - titleBarHeight - inputAreaHeight
+                let chatFontFamily = "helvetica"
 
-                let style_wrapper =  `
-                .chat-client-wrapper { 
-                    border-radius: 4px; 
-                    bottom: 100px; 
-                    right: 20px; 
-                    width: 370px; 
-                    height: ${wrapperHeight}px;
-                    position: fixed; 
-                    overflow: hidden; 
-                    display: flex;
-                    flex-direction: column;                        
-                    box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
-                }`             
+                style.textContent =  this.styleClientWrapper(chatFontFamily, wrapperHeight)  
+                    + this.styleToggleButton() 
+                    + this.styleTitleArea(titleBarHeight)
+                    + this.styleConversationWrapper(conversationAreaHeight)
+                    + this.styleInputArea(inputAreaHeight)
+                    + this.styleChatMessages();
 
+
+                // Build element
+                var shadow = this.attachShadow({mode: 'open'});
+
+                shadow.appendChild(style);
+
+                wrapper.appendChild(toggleButton); 
+
+                wrapper.appendChild(titleBar);                
+                wrapper.appendChild(conversationArea);
+                wrapper.appendChild(inputControlArea);                  
+
+                shadow.appendChild(wrapper);
+                let parent_wrapper = this
+                sendButton.addEventListener('click',  function ( event ) {
+                    // console.log("click event triggered.",  event)
+                    if( event.target.id == chat_button_id) {
+                            console.log("Sending Message: ", inputBox.value)
+                            parent_wrapper.createUserMessageElement(inputBox.value,  conversationArea)                            
+                    };
+                  } )
+            }
+
+            createUserMessageElement(message, conversation_wrapper) {
+                console.log("Locating conversation_wrapper", conversation_wrapper)
+                if (conversation_wrapper != undefined && conversation_wrapper != null) {
+                    var userMessageBox = document.createElement('div')
+                    userMessageBox.setAttribute('class', 'human messages')                  
+                    
+                    var msg = document.createElement('div')
+                    msg.setAttribute('class', 'message')
+                    msg.textContent = message 
+
+                    userMessageBox.appendChild(msg)
+                    conversation_wrapper.appendChild(userMessageBox)
+                }
+            }
+
+            createBotResponseElement(bot_response, conversation_wrapper){
+
+            }
+
+            styleToggleButton(){
                 let style_toggle_button = `
                 .chat-client-toggle-button{
                     border-radius: 30px; 
@@ -106,13 +142,36 @@
                     box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
                 }`
 
+                return style_toggle_button
+            }
+
+            styleClientWrapper(chatFontFamily, wrapperHeight){
+                let style_wrapper =  `
+                .chat-client-wrapper { 
+                    border-radius: 4px; 
+                    bottom: 100px; 
+                    right: 20px; 
+                    width: 370px; 
+                    height: ${wrapperHeight}px;
+                    position: fixed; 
+                    overflow: hidden; 
+                    display: flex;
+                    flex-direction: column;                        
+                    box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
+                    font-family: ${chatFontFamily};
+                    align-items: center;
+                }`   
+                return style_wrapper
+            }
+
+            styleTitleArea(titleBarHeight){
                 let style_title_bar = `
-                .chat-client-titlebar{ 
-                    width: 100%; 
-                    height: ${titleBarHeight}px;
-                    background: #409EFF; 
-                     display:flex; flex-direction: row; justify-content: center; align-items: center; 
-                }`
+                    .chat-client-titlebar{ 
+                        width: 100%; 
+                        height: ${titleBarHeight}px;
+                        background: #409EFF; 
+                        display:flex; flex-direction: row; justify-content: center; align-items: center; 
+                    }`
 
                 let style_close_btn =`
                 .chat-client-close-btn { 
@@ -131,6 +190,20 @@
                     height: 16px;
                 }`
 
+                return style_title_bar + style_close_btn + style_close_btn_icon
+            }
+
+            styleConversationWrapper(conversationAreaHeight){
+                let style_conversation_area = `
+                .chat-client-conversation-area{
+                    width: 100%; 
+                    height: ${conversationAreaHeight}px;
+                    overflow-y: scroll; 
+                    background: #F2F6FC; 
+                }`
+                return style_conversation_area
+            }
+            styleInputArea(inputAreaHeight){
                 let style_input_area = `
                 .chat-client-input-area{                     
                     width: 100%; 
@@ -139,14 +212,12 @@
                     display:flex; flex-direction: row; justify-content: center; align-items: center;
                 }`
 
-                let style_conversation_area = `
-                .chat-client-conversation-area{
-                    width: 100%; 
-                    height: ${conversationAreaHeight}px;
-                    overflow-y: scroll; 
-                    background: #F2F6FC; 
-                }`
+                return style_input_area + 
+                    this.styleInputBox() +
+                    this.styleSendButton() 
+            }
 
+            styleInputBox(){
                 let style_input_box = `
                 .chat-input-box {
                     background: #EBEEF5; 
@@ -159,61 +230,78 @@
                   text:focus {
                      border: none; 
                  }`
-
-                let style_input_button = `
-                    .chat-send-button{
-                        width: 60px; 
-                        border: none;
-                        cursor: pointer;
-                    }
-                `
-
-                style.textContent =  style_wrapper  
-                    + style_toggle_button 
-                    + style_title_bar 
-                    + style_close_btn  + style_close_btn_icon
-                    + style_input_area 
-                    + style_input_box + style_input_button
-                    + style_conversation_area;
-
-
-                    // Build element
-                var shadow = this.attachShadow({mode: 'open'});
-
-                shadow.appendChild(style);
-
-                wrapper.appendChild(toggleButton);                
-
-                wrapper.appendChild(titleBar);                
-                wrapper.appendChild(conversationArea);
-                wrapper.appendChild(inputControlArea);                  
-
-                shadow.appendChild(wrapper);
-                let parent_wrapper = this
-                sendButton.addEventListener('click',  function ( event ) {
-                    // console.log("click event triggered.",  event)
-                    if( event.target.id == chat_button_id) {
-                            console.log("Sending Message: ", inputBox.value)
-                            parent_wrapper.createUserMessageElement(inputBox.value)                            
-                    };
-                  } )
+                 return style_input_box
             }
 
-            createUserMessageElement(message) {
-                
-                var wrapper = this.getElementsByClassName('chat-client-conversation-area')
-                console.log("Locating conversation_wrapper", wrapper)
-                if (wrapper != undefined && wrapper != null) {
-                    var userMessage = document.createElement('div')
-                    var messageSpan = document.createElement('span')
-                    messageSpan.textContent = message
-                    userMessage.appendChild(messageSpan)
-                    wrapper.appendChild(userMessage)
+            styleSendButton(){
+                let style_input_button = `
+                .chat-send-button{
+                    width: 60px; 
+                    border: none;
+                    cursor: pointer;
                 }
+                ` 
+                return style_input_button
+            }
+
+            styleChatMessages(){
+                let style_chat_message = `
+                .messages {
+                    margin-top: 30px;
+                    display: flex;
+                    flex-direction: column;
+                  }
+              
+                  .message {
+                    border-radius: 20px;
+                    padding: 8px 15px;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+                    display: inline-block;
+                  }
+
+
+                .human {
+                    align-items: flex-end;
+                }
+            
+                .human .message {
+                    color: white;
+                    margin-left: 25%;
+                    background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
+                    background-attachment: fixed;
+                    position: relative;
+                    border-radius: 14px 0px 14px 14px;
+                }
+            
+                .human .message.last:before {
+                    content: "";
+                    position: absolute;
+                    z-index: 0;
+                    bottom: 0;
+                    right: -8px;
+                    height: 20px;
+                    width: 20px;
+                    background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
+                    background-attachment: fixed;
+                    border-bottom-left-radius: 15px;
+                }
+            
+                .human .message.last:after {
+                    content: "";
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 0;
+                    right: -10px;
+                    width: 10px;
+                    height: 20px;
+                    background: white;
+                    border-bottom-left-radius: 10px;
+                }
+                `
+                return style_chat_message
             }
     });
-
-    console.log("hello")
 })(window);
 
 
