@@ -1,20 +1,22 @@
 (function (global) {
     'use strict';
+
+    const chat_client_wrapper_id = 'chat-client-wrapper-101'
+    const chat_button_id = 'chat-send-btn-101';
+    const chat_input_box_id = 'chat-input-box-101';
+    const chat_conversation_wrapper_id = 'chat-conversation-wrapper-101';
+
     let elementRootName = 'chat-client'
     let customElementRegistry = global.window.customElements;
     customElementRegistry.define(elementRootName, 
-        class extends HTMLElement {
+        class extends HTMLElement {            
             // Define the ctor
             constructor() {
                 // Call base class ctor
                 super(); 
                  
                 var title = this.getAttribute("client-title")
-                const chat_client_wrapper_id = 'chat-client-wrapper-101'
-                const chat_button_id = 'chat-send-btn-101';
-                const chat_input_box_id = 'chat-input-box-101';
-                const chat_conversation_wrapper_id = 'chat-conversation-wrapper-101';
-                
+                                
                 // Outter wrapper
                 var wrapper = document.createElement('div');
                 wrapper.setAttribute('class', 'chat-client-wrapper');
@@ -79,6 +81,7 @@
                 let chatFontFamily = "helvetica"
 
                 style.textContent =  this.styleClientWrapper(chatFontFamily, wrapperHeight)  
+                   +  this.styleHideInputBorder()
                     + this.styleToggleButton() 
                     + this.styleTitleArea(titleBarHeight)
                     + this.styleConversationWrapper(conversationAreaHeight)
@@ -101,16 +104,29 @@
                 let parent_wrapper = this
                 sendButton.addEventListener('click',  function ( event ) {
                     // console.log("click event triggered.",  event)
-                    if( event.target.id == chat_button_id) {
-                            console.log("Sending Message: ", inputBox.value)
-                            parent_wrapper.createUserMessageElement(inputBox.value,  conversationArea)                            
+                    if( event.target.id == chat_button_id) {                           
+                            parent_wrapper.sendMessage(inputBox.value,  conversationArea) 
+                            inputBox.value = ""
                     };
-                  } )
+                  })
+                
+                inputBox.addEventListener('keydown', function( event ) {
+                    if (event.key  === "Enter") {
+                        // Cancel the default action, if needed
+                        event.preventDefault();
+                        sendButton.click();
+                      }
+                })
             }
 
-            createUserMessageElement(message, conversation_wrapper) {
-                console.log("Locating conversation_wrapper", conversation_wrapper)
-                if (conversation_wrapper != undefined && conversation_wrapper != null) {
+            sendMessage(message, conversationView){
+                this.createUserMessageElement(message,  conversationView)       
+                this.sendMessageToRemoteService(message,  conversationView)                     
+            }
+
+            createUserMessageElement(message, conversationView) {
+                // console.log("Adding user message to", conversationView)
+                if (conversationView != undefined && conversationView != null) {
                     var userMessageBox = document.createElement('div')
                     userMessageBox.setAttribute('class', 'human messages')                  
                     
@@ -119,12 +135,102 @@
                     msg.textContent = message 
 
                     userMessageBox.appendChild(msg)
-                    conversation_wrapper.appendChild(userMessageBox)
+                    conversationView.appendChild(userMessageBox) 
+                    this.ensureLatestContentVisibleInContainer(conversationView)
                 }
             }
 
-            createBotResponseElement(bot_response, conversation_wrapper){
+            sendMessageToRemoteService(message, conversationView){
+                console.log("Sending message To Remote Service: ", message)
 
+                const url = "http://127.0.0.1:8080/talk"
+                const REQUEST_FINISHED_RESPONSE_READY = 4
+                const HTTP_STATUS_OK = 200
+                let parent_wrapper = this
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == REQUEST_FINISHED_RESPONSE_READY && this.status == HTTP_STATUS_OK) {
+                        try {
+                            var responseBody = JSON.parse(this.responseText);
+                            // console.log("Response Body:", responseBody)
+                            parent_wrapper.parseChatResponse(responseBody, conversationView)
+                        } catch (error) {
+                            console.error(error.toString())
+                        } 
+                        return;
+                   }
+                   console.log("Failure response retrieved: ", this)
+                };
+
+                xhttp.open("POST", url, true);
+                xhttp.setRequestHeader("Content-type", "application/json");
+                var requestBody = {
+                    "message": message
+                }
+                xhttp.send(JSON.stringify(requestBody));
+            }
+
+            parseChatResponse(responseBody, container){
+                console.log("Parsing Chat Response :", responseBody)
+                if(responseBody.status === "ok"){
+                    this.createBotResponseElement(responseBody, container)
+                }
+            }
+
+            createBotResponseElement(bot_response, container){
+                this.createBotMessageElements(bot_response.messages, container)
+                let rich_content = bot_response.rich_content
+                if (rich_content){
+                    this.createBotCardElements(rich_content.card, container)
+                    this.createBotListElements(rich_content.list, container)
+                    this.createBotSuggestionElements(rich_content.suggestions, container)
+                }
+            }
+            
+            createBotMessageElements(messages, container){
+                if(messages){
+                    messages.forEach(msg => {
+                        this.appendBotMessageElement(msg, container)
+                    });
+                }
+            }
+
+            appendBotMessageElement(message, container){
+                var botMessageBox = document.createElement('div')
+                botMessageBox.setAttribute('class', 'bot messages')                  
+                
+                var msg = document.createElement('div')
+                msg.setAttribute('class', 'message')
+                msg.textContent = message 
+
+                botMessageBox.appendChild(msg)
+                container.appendChild(botMessageBox) 
+                this.ensureLatestContentVisibleInContainer(container)
+            }
+
+            createBotCardElements(card, container){
+
+            }
+
+            createBotListElements(list, container){
+
+            }
+
+            createBotSuggestionElements(suggestions, container){
+
+            }
+
+            ensureLatestContentVisibleInContainer(container){
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            styleHideInputBorder(){
+                let style = `
+                input:focus, textarea:focus, select:focus{
+                    outline: none;
+                }
+                `
+                return style
             }
 
             styleToggleButton(){
@@ -245,18 +351,18 @@
             }
 
             styleChatMessages(){
+                // 
                 let style_chat_message = `
                 .messages {
-                    margin-top: 30px;
+                    margin-top: 10px;
                     display: flex;
                     flex-direction: column;
                   }
               
                   .message {
-                    border-radius: 20px;
                     padding: 8px 15px;
-                    margin-top: 5px;
-                    margin-bottom: 5px;
+                    margin-top: 1px;
+                    margin-bottom: 1px;
                     display: inline-block;
                   }
 
@@ -267,7 +373,7 @@
             
                 .human .message {
                     color: white;
-                    margin-left: 25%;
+                    margin-left: 15%;
                     background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
                     background-attachment: fixed;
                     position: relative;
@@ -284,7 +390,6 @@
                     width: 20px;
                     background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
                     background-attachment: fixed;
-                    border-bottom-left-radius: 15px;
                 }
             
                 .human .message.last:after {
@@ -295,8 +400,41 @@
                     right: -10px;
                     width: 10px;
                     height: 20px;
+                    background: white; 
+                }
+
+
+                .bot {
+                    align-items: flex-start;
+                }
+            
+                .bot .message {
+                    margin-right: 15%;
+                    background-color: #eee;
+                    position: relative;
+                    border-radius: 0px 14px 14px 14px;
+                }
+            
+                .bot .message.last:before {
+                    content: "";
+                    position: absolute;
+                    z-index: 0;
+                    bottom: 0;
+                    left: -7px;
+                    height: 20px;
+                    width: 20px;
+                    background: #eee;
+                }
+            
+                .bot .message.last:after {
+                    content: "";
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 0;
+                    left: -10px;
+                    width: 10px;
+                    height: 20px;
                     background: white;
-                    border-bottom-left-radius: 10px;
                 }
                 `
                 return style_chat_message
