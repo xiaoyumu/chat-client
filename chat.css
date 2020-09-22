@@ -1,0 +1,125 @@
+.messages {
+    margin-top: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .message {
+    padding: 8px 15px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    display: inline-block;
+  }
+
+
+.human {
+    align-items: flex-end;
+}
+
+.human .message {
+    color: white;
+    margin-left: 15%;
+    background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
+    background-attachment: fixed;
+    position: relative;
+    border-radius: 14px 0px 14px 14px;
+}
+
+.human .message.last:before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: 0;
+    right: -8px;
+    height: 20px;
+    width: 20px;
+    background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
+    background-attachment: fixed;
+}
+
+.human .message.last:after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    right: -10px;
+    width: 10px;
+    height: 20px;
+    background: white; 
+}
+
+
+.bot {
+    align-items: flex-start;
+}
+
+.bot .message {
+    margin-right: 15%;
+    background: #E4E7ED;
+    position: relative;
+    border-radius: 0px 14px 14px 14px;
+}
+
+.bot .message.last:before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: 0;
+    left: -7px;
+    height: 20px;
+    width: 20px;
+    background: #E4E7ED;
+}
+
+.bot .message.last:after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: -10px;
+    width: 10px;
+    height: 20px;
+    background: #E4E7ED;
+}
+
+
+.suggestion-btn-container {
+    display: inline-block;
+    margin: 10px;
+    display: flex;
+}
+
+
+.suggestion-btn { 
+    display: block;
+    margin: 5px;
+    padding: 5px;
+    cursor: pointer;
+    border: #409EFF solid;
+    border-width: 1px; 
+    border-radius: 20px;
+    color: #409EFF;
+    background-color: #E4E7ED;
+    
+}
+
+.suggestion-btn:hover{ 
+    color: #E4E7ED;
+    background-color: #409EFF;    
+}
+
+.suggestion-link-btn {
+    color: #409EFF;
+}
+
+.suggestion-link-btn:hover { 
+    color: #E4E7ED;
+    background-color: #409EFF;   
+}
+
+.link-icon {
+    display: inline-block;
+    margin: 3px 0 0 0;
+}
