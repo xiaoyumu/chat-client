@@ -1,0 +1,99 @@
+.chat-client-wrapper { 
+    border-radius: 4px; 
+    bottom: 100px; 
+    right: 20px; 
+    width: 370px; 
+    position: fixed; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;                        
+    box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
+    align-items: center;
+}
+
+.chat-client-toggle-button{
+    border-radius: 30px; 
+    bottom: 20px; 
+    right: 20px; 
+    width: 60px; 
+    height: 60px; 
+    position: fixed; 
+    overflow: hidden; 
+    display: flex;
+    cursor: pointer;
+    box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
+}
+
+.chat-client-close-btn { 
+    margin: 8px; 
+    bottom: 10px; 
+    right: 10px; 
+    width: 20px; 
+    height: 20px; 
+    cursor: pointer;
+    background: #F2F6FC; 
+}
+
+.close-button-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.chat-client-titlebar{ 
+    width: 100%; 
+    background: #409EFF; 
+    display:flex; flex-direction: row; justify-content: center; align-items: center; 
+}
+
+.chat-client-conversation-area{
+    width: 100%; 
+    overflow-y: scroll; 
+    background: #F2F6FC; 
+}
+
+.chat-client-input-area{                     
+    width: 100%; 
+    background: #EBEEF5; 
+    display:flex; flex-direction: row; justify-content: center; align-items: center;
+}
+
+.chat-input-box {
+    background: #EBEEF5; 
+     border-radius: 0;
+     width: 100%;  
+     border: none; 
+     font-size: 14px;  
+     padding-left: 14px;                          
+ }
+ 
+text:focus {
+     border: none; 
+}
+
+input:focus, textarea:focus, select:focus{
+    outline: none;
+}
+
+.chat-send-button{
+    width: 60px; 
+    border: none;
+    cursor: pointer;
+}
+
+/*Remove a tag underline*/
+a:link {
+    text-decoration: none;
+}
+
+a:visited {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+a:active {
+    text-decoration: none;
+}
+
