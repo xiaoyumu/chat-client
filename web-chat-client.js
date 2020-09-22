@@ -6,6 +6,10 @@
     const chat_input_box_id = 'chat-input-box-101';
     const chat_conversation_wrapper_id = 'chat-conversation-wrapper-101';
 
+    const SVG_ICON_CLASS = "svg-icon"
+    const DEFAULT_ICON_VIEWBOX = "0 0 16 16"
+    const SVG_NS = "http://www.w3.org/2000/svg"
+
     let elementRootName = 'chat-client'
     let customElementRegistry = global.window.customElements;
     customElementRegistry.define(elementRootName, 
@@ -70,29 +74,35 @@
                 conversationArea.setAttribute('class', 'chat-client-conversation-area');
                 conversationArea.setAttribute('id', chat_conversation_wrapper_id)
                
-                // Add style for outter wrapper (the chat window)
-                var style = document.createElement('style');
-                style.setAttribute('scope', elementRootName)
-
                 let wrapperHeight = 560;
                 let titleBarHeight = 40;
                 let inputAreaHeight = 60;
                 let conversationAreaHeight = wrapperHeight - titleBarHeight - inputAreaHeight
                 let chatFontFamily = "helvetica"
 
-                style.textContent =  this.styleClientWrapper(chatFontFamily, wrapperHeight)  
-                   +  this.styleHideInputBorder()
-                    + this.styleToggleButton() 
-                    + this.styleTitleArea(titleBarHeight)
-                    + this.styleConversationWrapper(conversationAreaHeight)
-                    + this.styleInputArea(inputAreaHeight)
-                    + this.styleChatMessages();
+                wrapper.setAttribute("style", `height: ${wrapperHeight}px; font-family: ${chatFontFamily};`)
+                titleBar.setAttribute("style", `height: ${titleBarHeight}px;`)
+                conversationArea.setAttribute("style", `height: ${conversationAreaHeight}px;`)
+                inputControlArea.setAttribute("style", `height: ${inputAreaHeight}px;`)
 
+                // Add style for outter wrapper (the chat window)
+                // var style = document.createElement('style');
+                // style.setAttribute('scope', elementRootName)
+                // style.textContent =  this.styleClientWrapper(chatFontFamily, wrapperHeight);
 
                 // Build element
                 var shadow = this.attachShadow({mode: 'open'});
+                // shadow.appendChild(style);
 
-                shadow.appendChild(style);
+                var linkStyleGeneral = document.createElement('link')
+                linkStyleGeneral.setAttribute("rel", "stylesheet")
+                linkStyleGeneral.setAttribute("href", "styles.css")
+                shadow.appendChild(linkStyleGeneral);
+
+                var chatStyle = document.createElement('link')
+                chatStyle.setAttribute("rel", "stylesheet")
+                chatStyle.setAttribute("href", "chat.css")
+                shadow.appendChild(chatStyle);
 
                 wrapper.appendChild(toggleButton); 
 
@@ -217,228 +227,101 @@
             }
 
             createBotSuggestionElements(suggestions, container){
+                if(suggestions == undefined || suggestions == null) return
+                if(suggestions.length == 0) return
 
+                var suggestionContainer = document.createElement('div')
+                suggestionContainer.setAttribute("class", "suggestion-btn-container")
+                suggestions.forEach(sug => {
+                     if (sug.link){
+                        // Link button
+                        var linkButton = document.createElement('a')
+                        linkButton.setAttribute("class", "suggestion-btn suggestion-link-btn")
+                        linkButton.setAttribute("href", sug.link)
+                        linkButton.setAttribute("target", "_blank")
+
+                        var linkText = document.createElement('span')
+                        linkText.textContent = sug.title
+
+                        linkButton.appendChild(linkText)
+                        linkButton.appendChild(this.createLinkIcon())
+                        
+                        suggestionContainer.appendChild(linkButton)
+                     } else {
+                        // Normal button
+                        var suggestionBtn = document.createElement('div')
+                        suggestionBtn.setAttribute('class', 'suggestion-btn')
+
+                        var btnText = document.createElement('span')                        
+                        btnText.textContent = sug.title
+                        
+                        suggestionBtn.appendChild(btnText)
+                        suggestionContainer.appendChild(suggestionBtn)
+                     }
+                });
+                container.appendChild(suggestionContainer)
             }
 
             ensureLatestContentVisibleInContainer(container){
                 container.scrollTop = container.scrollHeight;
             }
-            
-            styleHideInputBorder(){
-                let style = `
-                input:focus, textarea:focus, select:focus{
-                    outline: none;
-                }
-                `
-                return style
+
+            createLinkIcon(){
+                const pathA = "M4.715 6.542L3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.001 1.001 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"
+                const pathB = "M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 0 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 0 0-4.243-4.243L6.586 4.672z"
+
+                var linkIcon = this.createSvgElementByPath(
+                    [pathA, pathB], 
+                    'link-icon'
+                )
+
+                return linkIcon
             }
 
-            styleToggleButton(){
-                let style_toggle_button = `
-                .chat-client-toggle-button{
-                    border-radius: 30px; 
-                    bottom: 20px; 
-                    right: 20px; 
-                    width: 60px; 
-                    height: 60px; 
-                    position: fixed; 
-                    overflow: hidden; 
-                    display: flex;
-                    cursor: pointer;
-                    box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
-                }`
-
-                return style_toggle_button
+            createSvgDataPath(pathData, fillRule=null){
+                var svgPath = document.createElementNS(SVG_NS, 'path')
+                svgPath.setAttributeNS(null, 'd', pathData)
+                if(fillRule){
+                    svgPath.setAttributeNS(null, 'fill-rule', fillRule)
+                }
+                return svgPath
             }
 
-            styleClientWrapper(chatFontFamily, wrapperHeight){
-                let style_wrapper =  `
-                .chat-client-wrapper { 
-                    border-radius: 4px; 
-                    bottom: 100px; 
-                    right: 20px; 
-                    width: 370px; 
-                    height: ${wrapperHeight}px;
-                    position: fixed; 
-                    overflow: hidden; 
-                    display: flex;
-                    flex-direction: column;                        
-                    box-shadow: rgba(0, 0, 0, 0.24) 1px 4px 15px 0px;
-                    font-family: ${chatFontFamily};
-                    align-items: center;
-                }`   
-                return style_wrapper
+            createSvgElementByPath(
+                pathData, 
+                iconStyleClass=SVG_ICON_CLASS, 
+                viewBox=DEFAULT_ICON_VIEWBOX,
+                fillRule=null){
+                var svg = document.createElementNS(SVG_NS, 'svg')
+                svg.setAttributeNS(null, 'width', '1em')
+                svg.setAttributeNS(null, 'height', '1em')
+                svg.setAttributeNS(null, 'viewBox', viewBox)
+                svg.setAttributeNS(null, 'class', iconStyleClass)
+                svg.setAttributeNS(null, 'fill', 'currentColor')
+                if (Array.isArray(pathData)){
+                    pathData.forEach(p=>{
+                        var svgPath = this.createSvgDataPath(p, fillRule)
+                        svg.appendChild(svgPath)
+                    })
+                } else {
+                    var svgPath = this.createSvgDataPath(pathData, fillRule)
+                    svg.appendChild(svgPath)
+                }
+                return svg
             }
 
-            styleTitleArea(titleBarHeight){
-                let style_title_bar = `
-                    .chat-client-titlebar{ 
-                        width: 100%; 
-                        height: ${titleBarHeight}px;
-                        background: #409EFF; 
-                        display:flex; flex-direction: row; justify-content: center; align-items: center; 
-                    }`
+            createSvgByPath(pathData, 
+                wrapperStyleClass, 
+                iconStyleClass=SVG_ICON_CLASS, 
+                viewBox=DEFAULT_ICON_VIEWBOX,
+                fillRule=null){
+                var svgIcon = document.createElement('div')
+                svgIcon.setAttribute('class', wrapperStyleClass)
 
-                let style_close_btn =`
-                .chat-client-close-btn { 
-                    margin: 8px; 
-                    bottom: 10px; 
-                    right: 10px; 
-                    width: 20px; 
-                    height: 20px; 
-                    cursor: pointer;
-                    background: #F2F6FC; 
-                }`
-
-                let style_close_btn_icon = `
-                .close-button-icon {
-                    width: 16px;
-                    height: 16px;
-                }`
-
-                return style_title_bar + style_close_btn + style_close_btn_icon
+                svgIcon.appendChild(this.createSvgElementByPath(pathData, iconStyleClass, viewBox, fillRule))
+                return svgIcon
             }
 
-            styleConversationWrapper(conversationAreaHeight){
-                let style_conversation_area = `
-                .chat-client-conversation-area{
-                    width: 100%; 
-                    height: ${conversationAreaHeight}px;
-                    overflow-y: scroll; 
-                    background: #F2F6FC; 
-                }`
-                return style_conversation_area
-            }
-            styleInputArea(inputAreaHeight){
-                let style_input_area = `
-                .chat-client-input-area{                     
-                    width: 100%; 
-                    height: ${inputAreaHeight}px;
-                    background: #EBEEF5; 
-                    display:flex; flex-direction: row; justify-content: center; align-items: center;
-                }`
-
-                return style_input_area + 
-                    this.styleInputBox() +
-                    this.styleSendButton() 
-            }
-
-            styleInputBox(){
-                let style_input_box = `
-                .chat-input-box {
-                    background: #EBEEF5; 
-                     border-radius: 0;
-                     width: 100%;  
-                     border: none; 
-                     font-size: 14px;  
-                     padding-left: 14px;                          
-                 }   
-                  text:focus {
-                     border: none; 
-                 }`
-                 return style_input_box
-            }
-
-            styleSendButton(){
-                let style_input_button = `
-                .chat-send-button{
-                    width: 60px; 
-                    border: none;
-                    cursor: pointer;
-                }
-                ` 
-                return style_input_button
-            }
-
-            styleChatMessages(){
-                // 
-                let style_chat_message = `
-                .messages {
-                    margin-top: 10px;
-                    display: flex;
-                    flex-direction: column;
-                  }
-              
-                  .message {
-                    padding: 8px 15px;
-                    margin-top: 1px;
-                    margin-bottom: 1px;
-                    display: inline-block;
-                  }
-
-
-                .human {
-                    align-items: flex-end;
-                }
-            
-                .human .message {
-                    color: white;
-                    margin-left: 15%;
-                    background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
-                    background-attachment: fixed;
-                    position: relative;
-                    border-radius: 14px 0px 14px 14px;
-                }
-            
-                .human .message.last:before {
-                    content: "";
-                    position: absolute;
-                    z-index: 0;
-                    bottom: 0;
-                    right: -8px;
-                    height: 20px;
-                    width: 20px;
-                    background: linear-gradient(to bottom, #00D0EA 0%, #0085D1 100%);
-                    background-attachment: fixed;
-                }
-            
-                .human .message.last:after {
-                    content: "";
-                    position: absolute;
-                    z-index: 1;
-                    bottom: 0;
-                    right: -10px;
-                    width: 10px;
-                    height: 20px;
-                    background: white; 
-                }
-
-
-                .bot {
-                    align-items: flex-start;
-                }
-            
-                .bot .message {
-                    margin-right: 15%;
-                    background-color: #eee;
-                    position: relative;
-                    border-radius: 0px 14px 14px 14px;
-                }
-            
-                .bot .message.last:before {
-                    content: "";
-                    position: absolute;
-                    z-index: 0;
-                    bottom: 0;
-                    left: -7px;
-                    height: 20px;
-                    width: 20px;
-                    background: #eee;
-                }
-            
-                .bot .message.last:after {
-                    content: "";
-                    position: absolute;
-                    z-index: 1;
-                    bottom: 0;
-                    left: -10px;
-                    width: 10px;
-                    height: 20px;
-                    background: white;
-                }
-                `
-                return style_chat_message
-            }
     });
 })(window);
 
